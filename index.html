@@ -289,7 +289,7 @@
             </div>
             <div class="form-group">
               <label for="rentSqft">Rent/sqft (HKD/mo)</label>
-              <input type="number" id="rentSqft" step="0.01" placeholder="1.5" value="1.5">
+              <input type="number" id="rentSqft" step="0.01" placeholder="40" value="40">
               <span class="error-msg">Must be greater than 0</span>
             </div>
             <div class="form-group">
@@ -303,7 +303,7 @@
             <legend>Mortgage</legend>
             <div class="form-group">
               <label for="mortgageRate">Rate (%)</label>
-              <input type="number" id="mortgageRate" step="0.1" placeholder="7" value="7">
+              <input type="number" id="mortgageRate" step="0.1" placeholder="3.5" value="3.5">
               <span class="error-msg">Must be between 0 and 30</span>
             </div>
             <div class="form-group">
@@ -589,7 +589,7 @@
       const irrPercent = result.irr;
       const npvValue = result.npv;
       const totalCashFlows = result.cashFlows.reduce((sum, cf) => sum + cf, 0);
-      const totalProfitLoss = totalCashFlows + result.terminalValue - vals.downPayment;
+      const totalProfitLoss = totalCashFlows + result.terminalValue - result.initialInvestment;
 
       let html = `
         <div class="metrics">
