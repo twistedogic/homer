@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real Estate Investment Calculator</title>
+  <style>
+    :root {
+      --bg: #f8f9fa;
+      --text: #1a1a2e;
+      --accent: #1a1a2e;
+      --error: #dc2626;
+      --error-bg: #fef2f2;
+      --disabled: #9ca3af;
+      --border: #d1d5db;
+      --panel-bg: #ffffff;
+      --metric-label: #6b7280;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .currency-label {
+      font-size: 14px;
+      color: var(--metric-label);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 24px;
+    }
+
+    .form-section {
+      margin-bottom: 20px;
+    }
+
+    .form-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-section legend {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--metric-label);
+      margin-bottom: 12px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .form-group input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-group input.invalid {
+      border-color: var(--error);
+      background: var(--error-bg);
+    }
+
+    .form-group .error-msg {
+      color: var(--error);
+      font-size: 12px;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .form-group input.invalid + .error-msg {
+      display: block;
+    }
+
+    .btn-calculate {
+      width: 100%;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+
+    .btn-calculate:disabled {
+      background: var(--disabled);
+      cursor: not-allowed;
+    }
+
+    .btn-calculate:not(:disabled):hover {
+      opacity: 0.9;
+    }
+
+    .results-panel h2 {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--metric-label);
+      margin-bottom: 16px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .metric {
+      text-align: center;
+    }
+
+    .metric-label {
+      font-size: 12px;
+      color: var(--metric-label);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-size: 28px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric-value.negative {
+      color: var(--error);
+    }
+
+    .cashflow-table-container {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+    }
+
+    .cashflow-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .cashflow-table th,
+    .cashflow-table td {
+      padding: 8px 12px;
+      text-align: right;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .cashflow-table th {
+      color: var(--metric-label);
+      font-weight: 500;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      position: sticky;
+      top: 0;
+      background: #f9fafb;
+    }
+
+    .cashflow-table td:first-child,
+    .cashflow-table th:first-child {
+      text-align: left;
+    }
+
+    .cashflow-table td:last-child {
+      font-weight: 500;
+    }
+
+    .cashflow-table td:last-child.positive {
+      color: #059669;
+    }
+
+    .cashflow-table td:last-child.negative {
+      color: var(--error);
+    }
+
+    .cashflow-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .placeholder-results {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--metric-label);
+    }
+
+    footer {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--metric-label);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Real Estate Investment Calculator</h1>
+      <span class="currency-label">HKD</span>
+    </header>
+
+    <div class="layout">
+      <div class="panel">
+        <form id="calculator-form">
+          <fieldset class="form-section">
+            <legend>Property</legend>
+            <div class="form-group">
+              <label for="price">Price (M HKD)</label>
+              <input type="number" id="price" step="0.1" placeholder="3.5" value="3.5" data-type="currency">
+              <span class="error-msg">Must be greater than 0</span>
+            </div>
+            <div class="form-group">
+              <label for="size">Size (sq ft)</label>
+              <input type="number" id="size" placeholder="2000" value="2000">
+              <span class="error-msg">Must be greater than 0</span>
+            </div>
+            <div class="form-group">
+              <label for="rentSqft">Rent/sqft (HKD/mo)</label>
+              <input type="number" id="rentSqft" step="0.01" placeholder="1.5" value="1.5">
+              <span class="error-msg">Must be greater than 0</span>
+            </div>
+            <div class="form-group">
+              <label for="managementFee">Management Fee (HKD/sqft/mo)</label>
+              <input type="number" id="managementFee" step="0.1" placeholder="5" value="5">
+              <span class="error-msg">Must be 0 or greater</span>
+            </div>
+          </fieldset>
+
+          <fieldset class="form-section">
+            <legend>Mortgage</legend>
+            <div class="form-group">
+              <label for="mortgageRate">Rate (%)</label>
+              <input type="number" id="mortgageRate" step="0.1" placeholder="7" value="7">
+              <span class="error-msg">Must be between 0 and 30</span>
+            </div>
+            <div class="form-group">
+              <label for="mortgagePeriod">Period (years)</label>
+              <input type="number" id="mortgagePeriod" placeholder="30" value="30">
+              <span class="error-msg">Must be between 1 and 50</span>
+            </div>
+            <div class="form-group">
+              <label for="downPayment">Down Payment (M HKD)</label>
+              <input type="number" id="downPayment" step="0.01" placeholder="0.7" value="0.7">
+              <span class="error-msg">Must be between 0 and property price</span>
+            </div>
+          </fieldset>
+
+          <fieldset class="form-section">
+            <legend>Investment</legend>
+            <div class="form-group">
+              <label for="holdingPeriod">Holding Period (years)</label>
+              <input type="number" id="holdingPeriod" placeholder="10" value="10">
+              <span class="error-msg">Must be between 1 and mortgage period</span>
+            </div>
+            <div class="form-group">
+              <label for="monthsRenters">Months w/ Renters</label>
+              <input type="number" id="monthsRenters" placeholder="11" value="11">
+              <span class="error-msg">Must be between 0 and 12</span>
+            </div>
+            <div class="form-group">
+              <label for="apprecRate">Property Apprec Rate (%)</label>
+              <input type="number" id="apprecRate" step="0.1" placeholder="3" value="3">
+              <span class="error-msg">Must be between 0 and 20</span>
+            </div>
+            <div class="form-group">
+              <label for="rentApprecRate">Rent Apprec Rate (%)</label>
+              <input type="number" id="rentApprecRate" step="0.1" placeholder="2" value="2">
+              <span class="error-msg">Must be between 0 and 20</span>
+            </div>
+          </fieldset>
+
+          <fieldset class="form-section">
+            <legend>Discount Rate</legend>
+            <div class="form-group">
+              <label for="discountRate">Discount Rate (%)</label>
+              <input type="number" id="discountRate" step="0.1" placeholder="7" value="7">
+              <span class="error-msg">Must be between 0 and 30</span>
+            </div>
+            <div class="form-group">
+              <label for="propertyTaxRate">Property Tax Rate (%)</label>
+              <input type="number" id="propertyTaxRate" step="0.1" placeholder="15" value="15">
+              <span class="error-msg">Must be between 0 and 30</span>
+            </div>
+          </fieldset>
+
+          <button type="button" id="calculate-btn" class="btn-calculate" disabled>Calculate</button>
+        </form>
+      </div>
+
+      <div class="panel results-panel">
+        <h2>Results</h2>
+        <div id="results-container">
+          <div class="placeholder-results">
+            Enter all inputs to see results
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      Results are estimates only. Assumptions:
+      15% Hong Kong Property Tax (with 20% repairs allowance),
+      7% selling costs.
+      No rates, insurance, maintenance, or HOA.
+      Actual returns may vary.
+    </footer>
+  </div>
+
+  <script>
+    const CURRENCY_PREFIX = 'HKD ';
+
+    const inputs = {
+      price: document.getElementById('price'),
+      size: document.getElementById('size'),
+      rentSqft: document.getElementById('rentSqft'),
+      managementFee: document.getElementById('managementFee'),
+      mortgageRate: document.getElementById('mortgageRate'),
+      mortgagePeriod: document.getElementById('mortgagePeriod'),
+      downPayment: document.getElementById('downPayment'),
+      holdingPeriod: document.getElementById('holdingPeriod'),
+      monthsRenters: document.getElementById('monthsRenters'),
+      aprecRate: document.getElementById('apprecRate'),
+      rentApprecRate: document.getElementById('rentApprecRate'),
+      discountRate: document.getElementById('discountRate'),
+      propertyTaxRate: document.getElementById('propertyTaxRate')
+    };
+
+    const calculateBtn = document.getElementById('calculate-btn');
+    const resultsContainer = document.getElementById('results-container');
+
+    function formatCurrency(num) {
+      const absNum = Math.abs(num);
+      const formatted = absNum.toLocaleString('en-HK', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      });
+      return (num < 0 ? '-' : '') + CURRENCY_PREFIX + formatted;
+    }
+
+    function formatPercent(decimal) {
+      return (decimal * 100).toFixed(1) + '%';
+    }
+
+    function parseNumber(val) {
+      if (typeof val === 'number') return val;
+      if (!val) return NaN;
+      const cleaned = val.toString().replace(/HKD\s*/gi, '').replace(/,/g, '').trim();
+      return parseFloat(cleaned);
+    }
+
+    function validateInputs() {
+      const vals = {
+        price: parseNumber(inputs.price.value),
+        size: parseNumber(inputs.size.value),
+        rentSqft: parseNumber(inputs.rentSqft.value),
+        managementFee: parseNumber(inputs.managementFee.value),
+        mortgageRate: parseNumber(inputs.mortgageRate.value),
+        mortgagePeriod: parseNumber(inputs.mortgagePeriod.value),
+        downPayment: parseNumber(inputs.downPayment.value),
+        holdingPeriod: parseNumber(inputs.holdingPeriod.value),
+        monthsRenters: parseNumber(inputs.monthsRenters.value),
+        aprecRate: parseNumber(inputs.aprecRate.value),
+        rentApprecRate: parseNumber(inputs.rentApprecRate.value),
+        discountRate: parseNumber(inputs.discountRate.value),
+        propertyTaxRate: parseNumber(inputs.propertyTaxRate.value)
+      };
+
+      const rules = {
+        price: { valid: vals.price > 0, msg: 'Must be greater than 0' },
+        size: { valid: vals.size > 0, msg: 'Must be greater than 0' },
+        rentSqft: { valid: vals.rentSqft > 0, msg: 'Must be greater than 0' },
+        managementFee: { valid: vals.managementFee >= 0, msg: 'Must be 0 or greater' },
+        mortgageRate: { valid: vals.mortgageRate > 0 && vals.mortgageRate <= 30, msg: 'Must be between 0 and 30' },
+        mortgagePeriod: { valid: vals.mortgagePeriod > 0 && vals.mortgagePeriod <= 50, msg: 'Must be between 1 and 50' },
+        downPayment: { valid: vals.downPayment > 0 && vals.downPayment < vals.price, msg: 'Must be between 0 and price' },
+        holdingPeriod: { valid: vals.holdingPeriod > 0 && vals.holdingPeriod <= vals.mortgagePeriod, msg: 'Must be between 1 and mortgage period' },
+        monthsRenters: { valid: vals.monthsRenters >= 0 && vals.monthsRenters <= 12, msg: 'Must be between 0 and 12' },
+        aprecRate: { valid: vals.aprecRate >= 0 && vals.aprecRate <= 20, msg: 'Must be between 0 and 20' },
+        rentApprecRate: { valid: vals.rentApprecRate >= 0 && vals.rentApprecRate <= 20, msg: 'Must be between 0 and 20' },
+        discountRate: { valid: vals.discountRate > 0 && vals.discountRate <= 30, msg: 'Must be between 0 and 30' },
+        propertyTaxRate: { valid: vals.propertyTaxRate > 0 && vals.propertyTaxRate <= 30, msg: 'Must be between 0 and 30' }
+      };
+
+      let allValid = true;
+      for (const [key, rule] of Object.entries(rules)) {
+        const el = inputs[key];
+        if (!rule.valid) {
+          el.classList.add('invalid');
+          allValid = false;
+        } else {
+          el.classList.remove('invalid');
+        }
+      }
+
+      return { valid: allValid, values: vals };
+    }
+
+    function calculateMortgagePayment(principal, annualRate, years) {
+      const r = annualRate / 100 / 12;
+      const n = years * 12;
+      if (r === 0) return principal / n;
+      return principal * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+    }
+
+    function calculateRemainingBalance(principal, annualRate, years, monthsElapsed) {
+      const r = annualRate / 100 / 12;
+      const n = years * 12;
+      if (r === 0) return principal * (1 - monthsElapsed / n);
+      const powN = Math.pow(1 + r, n);
+      const powP = Math.pow(1 + r, monthsElapsed);
+      return principal * (powN - powP) / (powN - 1);
+    }
+
+    function calculatePropertyTax(grossRent, taxRate) {
+      const netRent = grossRent * 0.80;
+      return netRent * (taxRate / 100);
+    }
+
+    function calculateTerminalValue(price, aprecRate, holdingPeriod, principal, mortgageRate, mortgagePeriod) {
+      const propertySale = price * Math.pow(1 + aprecRate / 100, holdingPeriod);
+      const monthsHeld = holdingPeriod * 12;
+      const remainingBalance = calculateRemainingBalance(principal, mortgageRate, mortgagePeriod, monthsHeld);
+      const sellingCosts = propertySale * 0.07;
+      return propertySale - remainingBalance - sellingCosts;
+    }
+
+    function calculateNPV(cashFlows, discountRate, initialInvestment, terminalValue, holdingPeriod) {
+      const r = discountRate / 100;
+      let npv = -initialInvestment;
+      for (let t = 1; t <= holdingPeriod; t++) {
+        if (t === holdingPeriod) {
+          npv += (cashFlows[t - 1] + terminalValue) / Math.pow(1 + r, t);
+        } else {
+          npv += cashFlows[t - 1] / Math.pow(1 + r, t);
+        }
+      }
+      return npv;
+    }
+
+    function calculateIRR(cashFlows, initialInvestment, terminalValue, holdingPeriod) {
+      let lower = 0;
+      let upper = 2.0;
+      const tolerance = 0.001;
+      const maxIterations = 100;
+
+      for (let i = 0; i < maxIterations; i++) {
+        const mid = (lower + upper) / 2;
+        let npv = -initialInvestment;
+        const r = mid;
+        for (let t = 1; t <= holdingPeriod; t++) {
+          if (t === holdingPeriod) {
+            npv += (cashFlows[t - 1] + terminalValue) / Math.pow(1 + r, t);
+          } else {
+            npv += cashFlows[t - 1] / Math.pow(1 + r, t);
+          }
+        }
+
+        if (Math.abs(npv) < tolerance) {
+          return mid;
+        }
+
+        if (npv > 0) {
+          lower = mid;
+        } else {
+          upper = mid;
+        }
+      }
+
+      return (lower + upper) / 2;
+    }
+
+    function calculate(vals) {
+      const priceM = vals.price * 1000000;
+      const downPaymentM = vals.downPayment * 1000000;
+      const principal = priceM - downPaymentM;
+      const monthlyPayment = calculateMortgagePayment(principal, vals.mortgageRate, vals.mortgagePeriod);
+      const annualMortgage = monthlyPayment * 12;
+
+      const cashFlows = [];
+      for (let year = 1; year <= vals.holdingPeriod; year++) {
+        const netRentPerSqft = vals.rentSqft - vals.managementFee;
+        const annualRent = vals.size * netRentPerSqft * vals.monthsRenters * Math.pow(1 + vals.rentApprecRate / 100, year - 1);
+        const propertyTax = calculatePropertyTax(annualRent, vals.propertyTaxRate);
+        const netCashFlow = annualRent - propertyTax - annualMortgage;
+        cashFlows.push(netCashFlow);
+      }
+
+      const terminalValue = calculateTerminalValue(
+        priceM,
+        vals.aprecRate,
+        vals.holdingPeriod,
+        principal,
+        vals.mortgageRate,
+        vals.mortgagePeriod
+      );
+
+      const initialInvestment = downPaymentM;
+      const propertyEndValue = priceM * Math.pow(1 + vals.aprecRate / 100, vals.holdingPeriod);
+
+      const npv = calculateNPV(cashFlows, vals.discountRate, initialInvestment, terminalValue, vals.holdingPeriod);
+      const irr = calculateIRR(cashFlows, initialInvestment, terminalValue, vals.holdingPeriod);
+
+      return {
+        cashFlows,
+        terminalValue,
+        propertyEndValue,
+        initialInvestment,
+        npv,
+        irr,
+        annualMortgage,
+        monthlyPayment
+      };
+    }
+
+    function displayResults(result, vals) {
+      const irrPercent = result.irr;
+      const npvValue = result.npv;
+      const totalCashFlows = result.cashFlows.reduce((sum, cf) => sum + cf, 0);
+      const totalProfitLoss = totalCashFlows + result.terminalValue - vals.downPayment;
+
+      let html = `
+        <div class="metrics">
+          <div class="metric">
+            <div class="metric-label">IRR</div>
+            <div class="metric-value">${formatPercent(irrPercent)}</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">NPV</div>
+            <div class="metric-value ${npvValue < 0 ? 'negative' : ''}">${formatCurrency(npvValue)}</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Property Value</div>
+            <div class="metric-value">${formatCurrency(result.propertyEndValue)}</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Total P/L</div>
+            <div class="metric-value ${totalProfitLoss < 0 ? 'negative' : ''}">${formatCurrency(totalProfitLoss)}</div>
+          </div>
+        </div>
+        <h2 style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; margin-bottom: 12px;">Cash Flow / Year</h2>
+        <div class="cashflow-table-container">
+          <table class="cashflow-table">
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th>Annual Rent</th>
+                <th>Property Tax</th>
+                <th>Mortgage</th>
+                <th>Net CF</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      for (let year = 1; year <= vals.holdingPeriod; year++) {
+        const netRentPerSqft = vals.rentSqft - vals.managementFee;
+        const annualRent = vals.size * netRentPerSqft * vals.monthsRenters * Math.pow(1 + vals.rentApprecRate / 100, year - 1);
+        const propertyTax = calculatePropertyTax(annualRent, vals.propertyTaxRate);
+        const cf = result.cashFlows[year - 1];
+        const isPositive = cf >= 0;
+
+        html += `
+          <tr>
+            <td>${year}</td>
+            <td>${formatCurrency(annualRent)}</td>
+            <td>${formatCurrency(propertyTax)}</td>
+            <td>${formatCurrency(result.annualMortgage)}</td>
+            <td class="${isPositive ? 'positive' : 'negative'}">${isPositive ? '+' : ''}${formatCurrency(cf)}</td>
+          </tr>
+        `;
+      }
+
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      resultsContainer.innerHTML = html;
+    }
+
+    function handleCalculate() {
+      const { valid, values } = validateInputs();
+      if (!valid) return;
+
+      resultsContainer.innerHTML = '<div class="placeholder-results">Calculating...</div>';
+
+      setTimeout(() => {
+        const result = calculate(values);
+        displayResults(result, values);
+      }, 10);
+    }
+
+    for (const input of Object.values(inputs)) {
+      input.addEventListener('input', () => {
+        const { valid } = validateInputs();
+        calculateBtn.disabled = !valid;
+      });
+      input.addEventListener('blur', () => {
+        const { valid } = validateInputs();
+        calculateBtn.disabled = !valid;
+      });
+    }
+
+    calculateBtn.addEventListener('click', handleCalculate);
+
+    const { valid } = validateInputs();
+    calculateBtn.disabled = !valid;
+  </script>
+</body>
+</html>
