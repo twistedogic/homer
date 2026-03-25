@@ -446,7 +446,7 @@
         mortgageRate: { valid: vals.mortgageRate > 0 && vals.mortgageRate <= 30, msg: 'Must be between 0 and 30' },
         mortgagePeriod: { valid: vals.mortgagePeriod > 0 && vals.mortgagePeriod <= 50, msg: 'Must be between 1 and 50' },
         downPayment: { valid: vals.downPayment > 0 && vals.downPayment < vals.price, msg: 'Must be between 0 and price' },
-        holdingPeriod: { valid: vals.holdingPeriod > 0 && vals.holdingPeriod <= vals.mortgagePeriod, msg: 'Must be between 1 and mortgage period' },
+        holdingPeriod: { valid: vals.holdingPeriod > 0 && vals.holdingPeriod <= 50, msg: 'Must be between 1 and 50' },
         monthsRenters: { valid: vals.monthsRenters >= 0 && vals.monthsRenters <= 12, msg: 'Must be between 0 and 12' },
         aprecRate: { valid: vals.aprecRate >= 0 && vals.aprecRate <= 20, msg: 'Must be between 0 and 20' },
         rentApprecRate: { valid: vals.rentApprecRate >= 0 && vals.rentApprecRate <= 20, msg: 'Must be between 0 and 20' },
@@ -492,7 +492,7 @@
     function calculateTerminalValue(price, aprecRate, holdingPeriod, principal, mortgageRate, mortgagePeriod) {
       const propertySale = price * Math.pow(1 + aprecRate / 100, holdingPeriod);
       const monthsHeld = holdingPeriod * 12;
-      const remainingBalance = calculateRemainingBalance(principal, mortgageRate, mortgagePeriod, monthsHeld);
+      const remainingBalance = monthsHeld > mortgagePeriod * 12 ? 0 : calculateRemainingBalance(principal, mortgageRate, mortgagePeriod, monthsHeld);
       const sellingCosts = propertySale * 0.07;
       return propertySale - remainingBalance - sellingCosts;
     }
@@ -554,7 +554,8 @@
         const netRentPerSqft = vals.rentSqft - vals.managementFee;
         const annualRent = vals.size * netRentPerSqft * vals.monthsRenters * Math.pow(1 + vals.rentApprecRate / 100, year - 1);
         const propertyTax = calculatePropertyTax(annualRent, vals.propertyTaxRate);
-        const netCashFlow = annualRent - propertyTax - annualMortgage;
+        const mortgagePayment = year <= vals.mortgagePeriod ? annualMortgage : 0;
+        const netCashFlow = annualRent - propertyTax - mortgagePayment;
         cashFlows.push(netCashFlow);
       }
 
@@ -637,7 +638,7 @@
             <td>${year}</td>
             <td>${formatCurrency(annualRent)}</td>
             <td>${formatCurrency(propertyTax)}</td>
-            <td>${formatCurrency(result.annualMortgage)}</td>
+            <td>${formatCurrency(year <= vals.mortgagePeriod ? result.annualMortgage : 0)}</td>
             <td class="${isPositive ? 'positive' : 'negative'}">${isPositive ? '+' : ''}${formatCurrency(cf)}</td>
           </tr>
         `;
