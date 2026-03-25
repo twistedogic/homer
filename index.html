@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Real Estate Investment Calculator</title>
+  <meta name="theme-color" content="#1a1a2e">
+  <title>Homer</title>
+  <link rel="manifest" href="/homer/manifest.json">
   <style>
     :root {
       --bg: #f8f9fa;
@@ -51,9 +53,20 @@
       font-weight: 600;
     }
 
-    .currency-label {
-      font-size: 14px;
-      color: var(--metric-label);
+    .install-btn {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--bg);
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      padding: 7px 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .install-btn:hover {
+      opacity: 0.85;
     }
 
     .layout {
@@ -263,13 +276,88 @@
       font-size: 12px;
       color: var(--metric-label);
     }
+
+    /* iOS Install Modal */
+    .ios-modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      z-index: 1000;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .ios-modal {
+      background: var(--accent);
+      color: var(--bg);
+      border-radius: 16px 16px 0 0;
+      padding: 24px 20px 36px;
+      width: 100%;
+      max-width: 480px;
+      position: relative;
+    }
+
+    .ios-modal h2 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .ios-modal p {
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .ios-modal .step {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .ios-modal .step-num {
+      font-weight: 700;
+      min-width: 18px;
+    }
+
+    .ios-modal-close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      background: none;
+      border: none;
+      color: var(--bg);
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+      opacity: 0.7;
+    }
+
+    .ios-modal-close:hover {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
+  <!-- iOS Install Instructions Modal -->
+  <div id="ios-install-modal" class="ios-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ios-modal-title">
+    <div class="ios-modal">
+      <button class="ios-modal-close" id="ios-modal-close" aria-label="Close">&times;</button>
+      <h2 id="ios-modal-title">Add Homer to Home Screen</h2>
+      <div class="step"><span class="step-num">1.</span><span>Tap the <strong>Share</strong> button (&#x2191; box with arrow) in Safari's toolbar</span></div>
+      <div class="step"><span class="step-num">2.</span><span>Scroll down and tap <strong>"Add to Home Screen"</strong></span></div>
+      <div class="step"><span class="step-num">3.</span><span>Tap <strong>"Add"</strong> in the top-right corner</span></div>
+      <p style="margin-top:16px;opacity:0.75;font-size:13px;">Homer will appear on your home screen like a native app.</p>
+    </div>
+  </div>
+
   <div class="container">
     <header>
-      <h1>Real Estate Investment Calculator</h1>
-      <span class="currency-label">HKD</span>
+      <h1>Homer</h1>
+      <button id="install-btn" class="install-btn" style="display:none" aria-label="Add to Home Screen">+ Add to Home Screen</button>
     </header>
 
     <div class="layout">
@@ -680,6 +768,80 @@
 
     const { valid } = validateInputs();
     calculateBtn.disabled = !valid;
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/homer/sw.js').catch(() => {});
+      });
+    }
+  </script>
+
+  <script>
+    (function () {
+      var installBtn = document.getElementById('install-btn');
+      if (!installBtn) return;
+
+      // Detect if already running in standalone mode
+      var isStandalone =
+        window.navigator.standalone === true ||
+        window.matchMedia('(display-mode: standalone)').matches;
+
+      if (isStandalone) return; // already installed, keep button hidden
+
+      // Detect iOS Safari
+      var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.MSStream;
+      var isSafari = /Safari/i.test(navigator.userAgent) && !/Chrome|CriOS|FxiOS/i.test(navigator.userAgent);
+
+      var deferredPrompt = null;
+
+      // Android / desktop Chrome: capture beforeinstallprompt
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        installBtn.style.display = '';
+      });
+
+      // iOS Safari: show button so user can get manual instructions
+      if (isIOS && isSafari) {
+        installBtn.style.display = '';
+      }
+
+      installBtn.addEventListener('click', function () {
+        if (deferredPrompt) {
+          // Android / desktop Chrome native prompt
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then(function (result) {
+            if (result.outcome === 'accepted') {
+              installBtn.style.display = 'none';
+            }
+            deferredPrompt = null;
+          });
+        } else if (isIOS && isSafari) {
+          // Show iOS instructions modal
+          var modal = document.getElementById('ios-install-modal');
+          if (modal) modal.style.display = 'flex';
+        }
+      });
+
+      // Hide button when app becomes standalone (after install)
+      window.matchMedia('(display-mode: standalone)').addEventListener('change', function (e) {
+        if (e.matches) installBtn.style.display = 'none';
+      });
+
+      // iOS modal close handlers
+      var iosModal = document.getElementById('ios-install-modal');
+      var iosModalClose = document.getElementById('ios-modal-close');
+      if (iosModal) {
+        iosModalClose && iosModalClose.addEventListener('click', function () {
+          iosModal.style.display = 'none';
+        });
+        iosModal.addEventListener('click', function (e) {
+          if (e.target === iosModal) iosModal.style.display = 'none';
+        });
+      }
+    })();
   </script>
 </body>
 </html>
