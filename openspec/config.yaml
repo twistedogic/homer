@@ -3,18 +3,20 @@ schema: spec-driven
 # Project context (optional)
 # This is shown to AI when creating artifacts.
 # Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Deployment: GitHub Pages (static hosting at /homer/ prefix)
+  Tech stack: TypeScript + Vite + Vitest (no frameworks)
+  Source code lives in src/ (TypeScript modules) and src/styles/ (plain CSS)
+  Build: `npm run build` produces dist/ via Vite; `npm run test` runs Vitest unit tests
+  GitHub Actions builds and deploys dist/ on push to main
+  PWA-enabled with service worker (sw.js) for offline support
+  No server-side code; all logic runs in the browser
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - Keep proposals under 500 words
+    - Always include a "Non-goals" section
+  tasks:
+    - Break tasks into chunks of max 2 hours

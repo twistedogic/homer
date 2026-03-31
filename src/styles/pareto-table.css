@@ -1,0 +1,131 @@
+.optimize-status {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--metric-label);
+  font-size: 14px;
+}
+
+.optimize-table-wrapper {
+  overflow-x: auto;
+}
+
+.optimize-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  min-width: 600px;
+}
+
+.optimize-table th {
+  color: var(--metric-label);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  padding: 10px 12px;
+  text-align: right;
+  border-bottom: 2px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.optimize-table th:first-child {
+  text-align: left;
+}
+
+.optimize-table th:hover {
+  color: var(--text);
+}
+
+.optimize-table th.sort-asc::after {
+  content: ' ↑';
+}
+
+.optimize-table th.sort-desc::after {
+  content: ' ↓';
+}
+
+.optimize-table td {
+  padding: 10px 12px;
+  text-align: right;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.optimize-table td:first-child {
+  text-align: left;
+}
+
+.optimize-table tbody tr {
+  cursor: pointer;
+}
+
+.optimize-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.optimize-table td.positive {
+  color: #059669;
+}
+
+.optimize-table td.negative {
+  color: var(--error);
+}
+
+.optimize-table td.undefined {
+  color: var(--disabled);
+}
+
+.expanded-cf {
+  display: none;
+  background: #f9fafb;
+}
+
+.expanded-cf.visible {
+  display: table-row;
+}
+
+.expanded-cf td {
+  padding: 12px 12px 16px;
+  background: #f9fafb;
+}
+
+.expanded-cf table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.expanded-cf table th {
+  color: var(--metric-label);
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  padding: 4px 8px;
+  text-align: right;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.expanded-cf table th:first-child {
+  text-align: left;
+}
+
+.expanded-cf table td {
+  padding: 4px 8px;
+  text-align: right;
+  border-bottom: none;
+}
+
+.expanded-cf table td:first-child {
+  text-align: left;
+}
+
+.expanded-cf table td.positive {
+  color: #059669;
+}
+
+.expanded-cf table td.negative {
+  color: var(--error);
+}

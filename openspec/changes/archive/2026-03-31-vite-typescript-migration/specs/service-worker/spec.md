@@ -1,21 +1,4 @@
-# Capability: service-worker
-
-## Purpose
-
-Defines the requirements for the service worker that enables offline caching and app installability using a stale-while-revalidate strategy.
-
-## Requirements
-
-### Requirement: Service worker registered
-The app SHALL register a service worker (`sw.js`) from `index.html` to enable caching and installability.
-
-#### Scenario: Registration on supported browsers
-- **WHEN** `index.html` loads in a browser that supports service workers
-- **THEN** `navigator.serviceWorker.register('/sw.js')` SHALL be called
-
-#### Scenario: Graceful degradation on unsupported browsers
-- **WHEN** `index.html` loads in a browser without service worker support
-- **THEN** the app SHALL function normally without any errors thrown
+## MODIFIED Requirements
 
 ### Requirement: Service worker caches app shell with stale-while-revalidate
 The service worker SHALL use a stale-while-revalidate strategy so the app loads instantly from cache while updating in the background. The PRECACHE list SHALL contain only `index.html` — hashed JS and CSS bundles are handled by HTTP cache headers, not precached by the service worker.

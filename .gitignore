@@ -7,6 +7,7 @@ node_modules/
 bun.lock
 
 .opencode/
+.crush/
 
 _site/
 .sass-cache/

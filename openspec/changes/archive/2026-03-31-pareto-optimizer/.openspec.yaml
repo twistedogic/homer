@@ -1,0 +1,10 @@
+schema: spec-driven
+created: 2026-03-29
+
+context: |
+  Deployment: GitHub Pages (static hosting at /homer/ prefix)
+  Tech stack: Vanilla HTML + CSS + JavaScript (no build tools, no frameworks)
+  All code must be static JavaScript — no server-side code, no npm dependencies
+  Pareto optimizer runs entirely in-browser using grid enumeration
+  No MiniZinc or external solver libraries — pure JS computation
+
