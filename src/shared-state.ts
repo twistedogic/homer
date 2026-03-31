@@ -1,6 +1,6 @@
 export const SHARED_KEYS = [
   'price', 'size', 'rentSqft', 'managementFee', 'mortgageRate',
-  'apprecRate', 'rentApprecRate', 'discountRate', 'propertyTaxRate', 'monthsRenters',
+  'apprecRate', 'rentApprecRate', 'discountRate', 'propertyTaxRate', 'monthsRenters', 'capex',
 ] as const;
 
 export type SharedKey = typeof SHARED_KEYS[number];

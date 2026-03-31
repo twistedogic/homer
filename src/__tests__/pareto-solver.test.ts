@@ -12,6 +12,7 @@ const baseShared = {
   discountRate: 7,
   propertyTaxRate: 15,
   monthsRenters: 11,
+  capex: 0,
 };
 
 describe('evaluateCombination', () => {
@@ -54,8 +55,8 @@ describe('evaluateCombination', () => {
 describe('extractParetoFrontier', () => {
   it('returns all results when none dominate each other', () => {
     const results: ParetoRow[] = [
-      { dpPct: 30, hp: 5, mp: 30, npv: 100, irr: 0.05, pl: 50, cashFlows: [] },
-      { dpPct: 50, hp: 5, mp: 30, npv: 50, irr: 0.10, pl: 100, cashFlows: [] },
+      { dpPct: 30, hp: 5, mp: 30, npv: 100, irr: 0.05, pl: 50, cashFlows: [], annualRents: [], propertyTaxes: [], mortgagePayments: [], annualCapex: 0 },
+      { dpPct: 50, hp: 5, mp: 30, npv: 50, irr: 0.10, pl: 100, cashFlows: [], annualRents: [], propertyTaxes: [], mortgagePayments: [], annualCapex: 0 },
     ];
     const frontier = extractParetoFrontier(results);
     expect(frontier).toHaveLength(2);
@@ -63,8 +64,8 @@ describe('extractParetoFrontier', () => {
 
   it('removes dominated solutions', () => {
     const results: ParetoRow[] = [
-      { dpPct: 30, hp: 5, mp: 30, npv: 100, irr: 0.10, pl: 200, cashFlows: [] },
-      { dpPct: 50, hp: 5, mp: 30, npv: 50, irr: 0.05, pl: 100, cashFlows: [] },
+      { dpPct: 30, hp: 5, mp: 30, npv: 100, irr: 0.10, pl: 200, cashFlows: [], annualRents: [], propertyTaxes: [], mortgagePayments: [], annualCapex: 0 },
+      { dpPct: 50, hp: 5, mp: 30, npv: 50, irr: 0.05, pl: 100, cashFlows: [], annualRents: [], propertyTaxes: [], mortgagePayments: [], annualCapex: 0 },
     ];
     const frontier = extractParetoFrontier(results);
     expect(frontier).toHaveLength(1);
@@ -77,7 +78,7 @@ describe('extractParetoFrontier', () => {
 
   it('handles single result', () => {
     const results: ParetoRow[] = [
-      { dpPct: 50, hp: 10, mp: 30, npv: 100, irr: 0.08, pl: 150, cashFlows: [] },
+      { dpPct: 50, hp: 10, mp: 30, npv: 100, irr: 0.08, pl: 150, cashFlows: [], annualRents: [], propertyTaxes: [], mortgagePayments: [], annualCapex: 0 },
     ];
     expect(extractParetoFrontier(results)).toHaveLength(1);
   });

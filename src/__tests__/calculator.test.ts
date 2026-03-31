@@ -6,6 +6,7 @@ import {
   calculateIRR,
   calculatePropertyTax,
   calculateTerminalValue,
+  calculate,
 } from '../calculator';
 
 describe('calculateMortgagePayment', () => {
@@ -88,5 +89,49 @@ describe('calculateIRR', () => {
     const cashFlows = [-100_000, -100_000];
     const irr = calculateIRR(cashFlows, 1_000, -500_000, 2);
     expect(irr).toBeNaN();
+  });
+});
+
+const baseVals = {
+  price: 3.5,
+  size: 2000,
+  rentSqft: 40,
+  managementFee: 5,
+  mortgageRate: 3.5,
+  mortgagePeriod: 30,
+  downPayment: 0.7,
+  holdingPeriod: 10,
+  monthsRenters: 11,
+  apprecRate: 3,
+  rentApprecRate: 2,
+  discountRate: 7,
+  propertyTaxRate: 15,
+  capex: 0,
+};
+
+describe('calculate with capex', () => {
+  it('capex=0 produces same net CF as baseline', () => {
+    const result = calculate({ ...baseVals, capex: 0 });
+    const annualRent = 2000 * (40 - 5) * 11;
+    const propertyTax = annualRent * 0.80 * (15 / 100);
+    const mortgage = result.annualMortgage;
+    expect(result.cashFlows[0]).toBeCloseTo(annualRent - propertyTax - mortgage, 0);
+  });
+
+  it('capex deducted annually from net CF', () => {
+    const withCapex = calculate({ ...baseVals, capex: 300 });
+    const withoutCapex = calculate({ ...baseVals, capex: 0 });
+    const expectedDeduction = 300 * 2000 / 10;
+    for (let i = 0; i < baseVals.holdingPeriod; i++) {
+      expect(withoutCapex.cashFlows[i] - withCapex.cashFlows[i]).toBeCloseTo(expectedDeduction, 0);
+    }
+  });
+
+  it('capex deduction is flat across all years', () => {
+    const result = calculate({ ...baseVals, capex: 200 });
+    const withoutCapex = calculate({ ...baseVals, capex: 0 });
+    const deductions = result.cashFlows.map((cf, i) => withoutCapex.cashFlows[i] - cf);
+    const expected = 200 * 2000 / 10;
+    deductions.forEach(d => expect(d).toBeCloseTo(expected, 0));
   });
 });

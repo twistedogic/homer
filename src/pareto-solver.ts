@@ -11,6 +11,7 @@ export interface SharedValues {
   discountRate: number;
   propertyTaxRate: number;
   monthsRenters: number;
+  capex: number;
 }
 
 export interface ParetoRow {
@@ -24,6 +25,7 @@ export interface ParetoRow {
   annualRents: number[];
   propertyTaxes: number[];
   mortgagePayments: number[];
+  annualCapex: number;
 }
 
 export const DP_VALUES = [30, 40, 50, 60, 70];
@@ -37,6 +39,7 @@ export function evaluateCombination(dpPct: number, hp: number, mp: number, share
   const monthlyPayment = calculateMortgagePayment(principal, shared.mortgageRate, mp);
   const annualMortgage = monthlyPayment * 12;
 
+  const annualCapex = shared.capex * shared.size / 10;
   const cashFlows: number[] = [];
   const annualRents: number[] = [];
   const propertyTaxes: number[] = [];
@@ -49,7 +52,7 @@ export function evaluateCombination(dpPct: number, hp: number, mp: number, share
     annualRents.push(annualRent);
     propertyTaxes.push(propertyTax);
     mortgagePayments.push(mortgagePayment);
-    cashFlows.push(annualRent - propertyTax - mortgagePayment);
+    cashFlows.push(annualRent - propertyTax - mortgagePayment - annualCapex);
   }
 
   const monthsHeld = hp * 12;
@@ -63,7 +66,7 @@ export function evaluateCombination(dpPct: number, hp: number, mp: number, share
 
   const totalPL = cashFlows.reduce((s, c) => s + c, 0) + terminalValue - initialInvestment;
 
-  return { dpPct, hp, mp, npv, irr, pl: totalPL, cashFlows, annualRents, propertyTaxes, mortgagePayments };
+  return { dpPct, hp, mp, npv, irr, pl: totalPL, cashFlows, annualRents, propertyTaxes, mortgagePayments, annualCapex };
 }
 
 export function extractParetoFrontier(results: ParetoRow[]): ParetoRow[] {

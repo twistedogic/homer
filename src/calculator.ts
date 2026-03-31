@@ -12,6 +12,7 @@ export interface CalcValues {
   rentApprecRate: number;
   discountRate: number;
   propertyTaxRate: number;
+  capex: number;
 }
 
 export interface CalcResult {
@@ -132,7 +133,8 @@ export function calculate(vals: CalcValues): CalcResult {
     const annualRent = vals.size * netRentPerSqft * vals.monthsRenters * Math.pow(1 + vals.rentApprecRate / 100, year - 1);
     const propertyTax = calculatePropertyTax(annualRent, vals.propertyTaxRate);
     const mortgagePayment = year <= vals.mortgagePeriod ? annualMortgage : 0;
-    const netCashFlow = annualRent - propertyTax - mortgagePayment;
+    const annualCapex = vals.capex * vals.size / 10;
+    const netCashFlow = annualRent - propertyTax - mortgagePayment - annualCapex;
     cashFlows.push(netCashFlow);
   }
 

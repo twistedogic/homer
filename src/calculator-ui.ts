@@ -15,6 +15,7 @@ const calcInputs = {
   rentApprecRate: document.getElementById('rentApprecRate') as HTMLInputElement,
   discountRate: document.getElementById('discountRate') as HTMLInputElement,
   propertyTaxRate: document.getElementById('propertyTaxRate') as HTMLInputElement,
+  capex: document.getElementById('capex') as HTMLInputElement,
 };
 
 function validateInputsCalc(): { valid: boolean; values: CalcValues } {
@@ -32,6 +33,7 @@ function validateInputsCalc(): { valid: boolean; values: CalcValues } {
     rentApprecRate: parseNumber(calcInputs.rentApprecRate.value),
     discountRate: parseNumber(calcInputs.discountRate.value),
     propertyTaxRate: parseNumber(calcInputs.propertyTaxRate.value),
+    capex: parseNumber(calcInputs.capex.value),
   };
 
   const rules: Record<keyof CalcValues, { valid: boolean }> = {
@@ -48,6 +50,7 @@ function validateInputsCalc(): { valid: boolean; values: CalcValues } {
     rentApprecRate: { valid: vals.rentApprecRate >= 0 && vals.rentApprecRate <= 20 },
     discountRate: { valid: vals.discountRate > 0 && vals.discountRate <= 30 },
     propertyTaxRate: { valid: vals.propertyTaxRate > 0 && vals.propertyTaxRate <= 30 },
+    capex: { valid: vals.capex >= 0 },
   };
 
   let allValid = true;
@@ -99,6 +102,7 @@ function displayResults(result: ReturnType<typeof calculate>, vals: CalcValues):
             <th>Annual Rent</th>
             <th>Property Tax</th>
             <th>Mortgage</th>
+            <th>CAPEX</th>
             <th>Net CF</th>
           </tr>
         </thead>
@@ -109,6 +113,7 @@ function displayResults(result: ReturnType<typeof calculate>, vals: CalcValues):
     const netRentPerSqft = vals.rentSqft - vals.managementFee;
     const annualRent = vals.size * netRentPerSqft * vals.monthsRenters * Math.pow(1 + vals.rentApprecRate / 100, year - 1);
     const propertyTax = calculatePropertyTax(annualRent, vals.propertyTaxRate);
+    const annualCapex = vals.capex * vals.size / 10;
     const cf = result.cashFlows[year - 1];
     const isPositive = cf >= 0;
 
@@ -118,6 +123,7 @@ function displayResults(result: ReturnType<typeof calculate>, vals: CalcValues):
         <td>${formatCurrency(annualRent)}</td>
         <td>${formatCurrency(propertyTax)}</td>
         <td>${formatCurrency(year <= vals.mortgagePeriod ? result.annualMortgage : 0)}</td>
+        <td>${formatCurrency(annualCapex)}</td>
         <td class="${isPositive ? 'positive' : 'negative'}">${isPositive ? '+' : ''}${formatCurrency(cf)}</td>
       </tr>
     `;

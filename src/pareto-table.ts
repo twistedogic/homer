@@ -95,6 +95,7 @@ export function renderParetoTable(pareto: ParetoRow[]): void {
                 <th>Annual Rent</th>
                 <th>Property Tax</th>
                 <th>Mortgage</th>
+                <th>CAPEX</th>
                 <th>Net CF</th>
               </tr>
             </thead>
@@ -114,6 +115,7 @@ export function renderParetoTable(pareto: ParetoRow[]): void {
                 <td>${formatCurrency(annualRent)}</td>
                 <td>${formatCurrency(propertyTax)}</td>
                 <td>${formatCurrency(mortgagePayment)}</td>
+                <td>${formatCurrency(sol.annualCapex)}</td>
                 <td class="${cfClass}">${cf >= 0 ? '+' : ''}${formatCurrency(cf)}</td>
               </tr>
       `;
