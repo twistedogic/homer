@@ -1,5 +1,6 @@
 import { parseNumber, formatCurrency, formatPercent } from './formatting';
 import { calculate, calculatePropertyTax, CalcValues } from './calculator';
+import { syncSharedInput, SHARED_KEYS } from './shared-state';
 
 const calcInputs = {
   price: document.getElementById('price') as HTMLInputElement,
@@ -154,10 +155,13 @@ export function initCalculator(): void {
     }, 10);
   }
 
-  for (const input of Object.values(calcInputs)) {
+  for (const [key, input] of Object.entries(calcInputs)) {
     input.addEventListener('input', () => {
       const { valid } = validateInputsCalc();
       calculateBtn.disabled = !valid;
+      if ((SHARED_KEYS as readonly string[]).includes(key)) {
+        syncSharedInput(key as typeof SHARED_KEYS[number], 'calc');
+      }
     });
     input.addEventListener('blur', () => {
       const { valid } = validateInputsCalc();
