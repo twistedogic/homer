@@ -1,5 +1,4 @@
 import { formatCurrency, formatPercent } from './formatting';
-import { calculateMortgagePayment, calculatePropertyTax } from './calculator';
 import { evaluateCombination, extractParetoFrontier, DP_VALUES, HP_VALUES, MP_VALUES, ParetoRow } from './pareto-solver';
 import { getSharedValues, SHARED_KEYS, getSharedInputs, syncSharedInput, SharedKey } from './shared-state';
 
@@ -102,19 +101,11 @@ export function renderParetoTable(pareto: ParetoRow[]): void {
             <tbody>
     `;
 
-    const shared = getSharedValues();
-    const priceM = shared.price;
-    const dpM = priceM * (sol.dpPct / 100);
-    const principal = priceM - dpM;
-    const monthlyPayment = calculateMortgagePayment(principal, shared.mortgageRate, sol.mp);
-    const annualMortgage = monthlyPayment * 12;
-
     for (let year = 1; year <= sol.hp; year++) {
-      const netRentPerSqft = shared.rentSqft - shared.managementFee;
-      const annualRent = shared.size * netRentPerSqft * shared.monthsRenters * Math.pow(1 + shared.rentApprecRate / 100, year - 1);
-      const propertyTax = calculatePropertyTax(annualRent, shared.propertyTaxRate);
-      const mortgagePayment = year <= sol.mp ? annualMortgage : 0;
-      const cf = annualRent - propertyTax - mortgagePayment;
+      const annualRent = sol.annualRents[year - 1];
+      const propertyTax = sol.propertyTaxes[year - 1];
+      const mortgagePayment = sol.mortgagePayments[year - 1];
+      const cf = sol.cashFlows[year - 1];
       const cfClass = cf >= 0 ? 'positive' : 'negative';
 
       html += `

@@ -38,6 +38,17 @@ describe('evaluateCombination', () => {
     expect(row20.cashFlows).toHaveLength(20);
     expect(row5.cashFlows).toHaveLength(5);
   });
+
+  it('mortgage payment is non-zero during mortgage period', () => {
+    const row = evaluateCombination(50, 10, 30, baseShared);
+    // price=3.5M, 50% dp → principal=1.75M, mortgage at 3.5% over 30yr ≈ 94,272/yr
+    // if price is not scaled to HKD, principal≈1.75 → annualMortgage≈0.094, effectively 0
+    const annualRent = baseShared.size * (baseShared.rentSqft - baseShared.managementFee) * baseShared.monthsRenters;
+    for (let i = 0; i < row.cashFlows.length; i++) {
+      const mortgageImplied = annualRent - row.cashFlows[i];
+      expect(mortgageImplied).toBeGreaterThan(1000);
+    }
+  });
 });
 
 describe('extractParetoFrontier', () => {
