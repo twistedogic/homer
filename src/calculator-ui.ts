@@ -139,38 +139,22 @@ function displayResults(result: ReturnType<typeof calculate>, vals: CalcValues):
   resultsContainer.innerHTML = html;
 }
 
+function updateCalculator(): void {
+  const { valid, values } = validateInputsCalc();
+  if (!valid) return;
+  const result = calculate(values);
+  displayResults(result, values);
+}
+
 export function initCalculator(): void {
-  const calculateBtn = document.getElementById('calculate-btn') as HTMLButtonElement;
-  const resultsContainer = document.getElementById('results-container')!;
-
-  function handleCalculate(): void {
-    const { valid, values } = validateInputsCalc();
-    if (!valid) return;
-
-    resultsContainer.innerHTML = '<div class="placeholder-results">Calculating...</div>';
-
-    setTimeout(() => {
-      const result = calculate(values);
-      displayResults(result, values);
-    }, 10);
-  }
-
   for (const [key, input] of Object.entries(calcInputs)) {
     input.addEventListener('input', () => {
-      const { valid } = validateInputsCalc();
-      calculateBtn.disabled = !valid;
       if ((SHARED_KEYS as readonly string[]).includes(key)) {
         syncSharedInput(key as typeof SHARED_KEYS[number], 'calc');
       }
-    });
-    input.addEventListener('blur', () => {
-      const { valid } = validateInputsCalc();
-      calculateBtn.disabled = !valid;
+      updateCalculator();
     });
   }
 
-  calculateBtn.addEventListener('click', handleCalculate);
-
-  const { valid: initialValid } = validateInputsCalc();
-  calculateBtn.disabled = !initialValid;
+  updateCalculator();
 }
