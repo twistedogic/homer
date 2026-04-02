@@ -1,0 +1,15 @@
+{
+  "name": "homer-cli",
+  "version": "0.1.0",
+  "description": "CLI for IRR, NPV, and Total P/L calculations",
+  "type": "module",
+  "bin": {
+    "homer-cli": "./bin/homer-cli.js"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "commander": "^11.1.0"
+  }
+}
