@@ -27,6 +27,7 @@
 
     <nav class="tab-nav" role="tablist">
       <button class="tab-btn active" role="tab" aria-selected="true" data-tab="calculator">Calculator</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="screening">Screening</button>
       <button class="tab-btn" role="tab" aria-selected="false" data-tab="optimize">Optimize</button>
     </nav>
 
@@ -128,6 +129,90 @@
             <div class="placeholder-results">
               Enter all inputs to see results
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screening Tab Panel -->
+    <div id="screening-panel" class="tab-panel" role="tabpanel">
+      <div class="layout">
+        <div class="panel">
+          <form id="screening-form">
+            <fieldset class="form-section">
+              <legend>Property</legend>
+              <div class="form-group">
+                <label for="scr-price">Price (M HKD)</label>
+                <input type="number" id="scr-price" step="0.1" placeholder="3.5" value="3.5" data-shared="price">
+              </div>
+              <div class="form-group">
+                <label for="scr-size">Size (sq ft)</label>
+                <input type="number" id="scr-size" placeholder="2000" value="2000" data-shared="size">
+              </div>
+              <div class="form-group">
+                <label for="scr-rentSqft">Rent/sqft (HKD/mo)</label>
+                <input type="number" id="scr-rentSqft" step="0.01" placeholder="40" value="40" data-shared="rentSqft">
+              </div>
+              <div class="form-group">
+                <label for="scr-managementFee">Management Fee (HKD/sqft/mo)</label>
+                <input type="number" id="scr-managementFee" step="0.1" placeholder="5" value="5" data-shared="managementFee">
+              </div>
+              <div class="form-group">
+                <label for="scr-capex">CAPEX (HKD/sqft/10yr)</label>
+                <input type="number" id="scr-capex" step="1" placeholder="300" value="300" data-shared="capex">
+              </div>
+              <div class="form-group">
+                <label for="scr-mortgageRate">Rate (%)</label>
+                <input type="number" id="scr-mortgageRate" step="0.1" placeholder="3.5" value="3.5" data-shared="mortgageRate">
+              </div>
+              <div class="form-group">
+                <label for="scr-mortgagePeriod">Period (years)</label>
+                <input type="number" id="scr-mortgagePeriod" placeholder="30" value="30">
+              </div>
+              <div class="form-group">
+                <label for="scr-downPayment">Down Payment (M HKD)</label>
+                <input type="number" id="scr-downPayment" step="0.01" placeholder="0.7" value="0.7">
+              </div>
+            </fieldset>
+
+            <fieldset class="form-section">
+              <legend>Investment</legend>
+              <div class="form-group">
+                <label for="scr-holdingPeriod">Holding Period (years)</label>
+                <input type="number" id="scr-holdingPeriod" placeholder="10" value="10">
+              </div>
+              <div class="form-group">
+                <label for="scr-monthsRenters">Months w/ Renters</label>
+                <input type="number" id="scr-monthsRenters" placeholder="11" value="11" data-shared="monthsRenters">
+              </div>
+              <div class="form-group">
+                <label for="scr-apprecRate">Property Apprec Rate (%)</label>
+                <input type="number" id="scr-apprecRate" step="0.1" placeholder="3" value="3" data-shared="apprecRate">
+              </div>
+              <div class="form-group">
+                <label for="scr-rentApprecRate">Rent Apprec Rate (%)</label>
+                <input type="number" id="scr-rentApprecRate" step="0.1" placeholder="2" value="2" data-shared="rentApprecRate">
+              </div>
+            </fieldset>
+
+            <fieldset class="form-section">
+              <legend>Discount Rate</legend>
+              <div class="form-group">
+                <label for="scr-discountRate">Discount Rate (%)</label>
+                <input type="number" id="scr-discountRate" step="0.1" placeholder="7" value="7" data-shared="discountRate">
+              </div>
+              <div class="form-group">
+                <label for="scr-propertyTaxRate">Property Tax Rate (%)</label>
+                <input type="number" id="scr-propertyTaxRate" step="0.1" placeholder="15" value="15" data-shared="propertyTaxRate">
+              </div>
+            </fieldset>
+          </form>
+        </div>
+
+        <div class="panel results-panel">
+          <h2>Screening Results</h2>
+          <div id="screening-results">
+            <div class="placeholder-results">Enter valid inputs to see screening results</div>
           </div>
         </div>
       </div>
