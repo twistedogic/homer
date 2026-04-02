@@ -24,7 +24,34 @@ export interface CalcResult {
   irr: number;
   annualMortgage: number;
   monthlyPayment: number;
+  screening: ScreeningMetrics;
 }
+
+export interface ScreeningMetrics {
+  grossYield: number;
+  netYield: number;
+  capRate: number;
+  cashOnCash: number;
+  score: ScreeningScore;
+}
+
+export interface ScreeningScore {
+  grossYield: MetricScore;
+  netYield: MetricScore;
+  capRate: MetricScore;
+  cashOnCash: MetricScore;
+  irr: MetricScore;
+  overall: "pass" | "marginal" | "fail";
+  passCount: number;
+  totalChecks: number;
+}
+
+export type MetricScore = {
+  value: number;
+  pass: boolean;
+  marginal: boolean;
+  threshold: number;
+};
 
 export function calculateMortgagePayment(principal: number, annualRate: number, years: number): number {
   const r = annualRate / 100 / 12;
@@ -120,6 +147,95 @@ export function calculateIRR(
   return NaN;
 }
 
+const THRESHOLDS = {
+  grossYield: { pass: 3.5, marginal: 2.5 },
+  netYield: { pass: 2.0, marginal: 1.5 },
+  capRate: { pass: 4.0, marginal: 3.0 },
+  cashOnCash: { pass: 8.0, marginal: 4.0 },
+  irr: { pass: 8.0, marginal: 5.0 },
+} as const;
+
+function metricScore(value: number, passThreshold: number, marginalThreshold: number): MetricScore {
+  return {
+    value,
+    pass: value >= passThreshold,
+    marginal: value >= marginalThreshold && value < passThreshold,
+    threshold: passThreshold,
+  };
+}
+
+export function calculateGrossYield(annualRent: number, purchasePrice: number): number {
+  if (purchasePrice === 0) return 0;
+  return (annualRent / purchasePrice) * 100;
+}
+
+export function calculateNetYield(
+  annualRent: number,
+  annualCosts: number,
+  totalInvestment: number,
+): number {
+  if (totalInvestment === 0) return 0;
+  return ((annualRent - annualCosts) / totalInvestment) * 100;
+}
+
+export function calculateCapRate(noi: number, purchasePrice: number): number {
+  if (purchasePrice === 0) return 0;
+  return (noi / purchasePrice) * 100;
+}
+
+export function calculateCashOnCash(annualPreTaxCashFlow: number, totalCashInvested: number): number {
+  if (totalCashInvested === 0) return 0;
+  return (annualPreTaxCashFlow / totalCashInvested) * 100;
+}
+
+export function calculateScreening(
+  annualRent: number,
+  annualCosts: number,
+  annualMortgage: number,
+  purchasePrice: number,
+  downPayment: number,
+  irr: number,
+): ScreeningMetrics {
+  const noi = annualRent - annualCosts;
+  const preTaxCashFlow = noi - annualMortgage;
+
+  const grossYield = calculateGrossYield(annualRent, purchasePrice);
+  const netYield = calculateNetYield(annualRent, annualCosts, downPayment);
+  const capRate = calculateCapRate(noi, purchasePrice);
+  const cashOnCash = calculateCashOnCash(preTaxCashFlow, downPayment);
+
+  const irrPct = isNaN(irr) ? 0 : irr * 100;
+
+  const scores = {
+    grossYield: metricScore(grossYield, THRESHOLDS.grossYield.pass, THRESHOLDS.grossYield.marginal),
+    netYield: metricScore(netYield, THRESHOLDS.netYield.pass, THRESHOLDS.netYield.marginal),
+    capRate: metricScore(capRate, THRESHOLDS.capRate.pass, THRESHOLDS.capRate.marginal),
+    cashOnCash: metricScore(cashOnCash, THRESHOLDS.cashOnCash.pass, THRESHOLDS.cashOnCash.marginal),
+    irr: metricScore(irrPct, THRESHOLDS.irr.pass, THRESHOLDS.irr.marginal),
+  };
+
+  const checks = Object.values(scores);
+  const passCount = checks.filter(s => s.pass).length;
+  const totalChecks = checks.length;
+
+  let overall: ScreeningScore["overall"];
+  if (passCount === totalChecks) {
+    overall = "pass";
+  } else if (passCount >= Math.ceil(totalChecks / 2)) {
+    overall = "marginal";
+  } else {
+    overall = "fail";
+  }
+
+  return {
+    grossYield,
+    netYield,
+    capRate,
+    cashOnCash,
+    score: { ...scores, overall, passCount, totalChecks },
+  };
+}
+
 export function calculate(vals: CalcValues): CalcResult {
   const priceM = vals.price * 1000000;
   const downPaymentM = vals.downPayment * 1000000;
@@ -153,6 +269,22 @@ export function calculate(vals: CalcValues): CalcResult {
   const npv = calculateNPV(cashFlows, vals.discountRate, initialInvestment, terminalValue, vals.holdingPeriod);
   const irr = calculateIRR(cashFlows, initialInvestment, terminalValue, vals.holdingPeriod);
 
+  const year1NetRentPerSqft = vals.rentSqft - vals.managementFee;
+  const year1GrossRent = vals.size * vals.rentSqft * vals.monthsRenters;
+  const year1Rent = vals.size * year1NetRentPerSqft * vals.monthsRenters;
+  const year1PropertyTax = calculatePropertyTax(year1GrossRent, vals.propertyTaxRate);
+  const year1Capex = vals.capex * vals.size / 10;
+  const year1Costs = year1PropertyTax + year1Capex;
+
+  const screening = calculateScreening(
+    year1Rent,
+    year1Costs,
+    annualMortgage,
+    priceM,
+    downPaymentM,
+    irr,
+  );
+
   return {
     cashFlows,
     terminalValue,
@@ -162,5 +294,6 @@ export function calculate(vals: CalcValues): CalcResult {
     irr,
     annualMortgage,
     monthlyPayment,
+    screening,
   };
 }

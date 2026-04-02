@@ -7,6 +7,11 @@ import {
   calculatePropertyTax,
   calculateTerminalValue,
   calculate,
+  calculateGrossYield,
+  calculateNetYield,
+  calculateCapRate,
+  calculateCashOnCash,
+  calculateScreening,
 } from '../calculator';
 
 describe('calculateMortgagePayment', () => {
@@ -133,5 +138,115 @@ describe('calculate with capex', () => {
     const deductions = result.cashFlows.map((cf, i) => withoutCapex.cashFlows[i] - cf);
     const expected = 200 * 2000 / 10;
     deductions.forEach(d => expect(d).toBeCloseTo(expected, 0));
+  });
+});
+
+describe('calculateGrossYield', () => {
+  it('matches example: HK$216K rent / HK$6M price = 3.6%', () => {
+    expect(calculateGrossYield(216_000, 6_000_000)).toBeCloseTo(3.6, 1);
+  });
+
+  it('returns 0 for zero purchase price', () => {
+    expect(calculateGrossYield(100_000, 0)).toBe(0);
+  });
+
+  it('returns value as percentage (not decimal)', () => {
+    expect(calculateGrossYield(100_000, 1_000_000)).toBeCloseTo(10, 1);
+  });
+});
+
+describe('calculateNetYield', () => {
+  it('subtracts costs from rent and divides by investment', () => {
+    expect(calculateNetYield(200_000, 100_000, 1_000_000)).toBeCloseTo(10, 1);
+  });
+
+  it('returns 0 for zero investment', () => {
+    expect(calculateNetYield(200_000, 100_000, 0)).toBe(0);
+  });
+
+  it('can be negative when costs exceed rent', () => {
+    expect(calculateNetYield(50_000, 100_000, 500_000)).toBeCloseTo(-10, 1);
+  });
+});
+
+describe('calculateCapRate', () => {
+  it('computes NOI / purchase price as percentage', () => {
+    expect(calculateCapRate(200_000, 4_000_000)).toBeCloseTo(5, 1);
+  });
+
+  it('returns 0 for zero purchase price', () => {
+    expect(calculateCapRate(200_000, 0)).toBe(0);
+  });
+});
+
+describe('calculateCashOnCash', () => {
+  it('computes annual pre-tax cash flow / total cash invested', () => {
+    expect(calculateCashOnCash(80_000, 1_000_000)).toBeCloseTo(8, 1);
+  });
+
+  it('returns 0 for zero cash invested', () => {
+    expect(calculateCashOnCash(80_000, 0)).toBe(0);
+  });
+
+  it('can be negative for cash-flow-negative investment', () => {
+    expect(calculateCashOnCash(-50_000, 1_000_000)).toBeCloseTo(-5, 1);
+  });
+});
+
+describe('calculateScreening', () => {
+  it('returns pass for a strong investment', () => {
+    const result = calculateScreening(
+      300_000,
+      30_000,
+      0,
+      3_000_000,
+      1_000_000,
+      0.15,
+    );
+    expect(result.score.overall).toBe('pass');
+    expect(result.grossYield).toBeGreaterThan(3.5);
+    expect(result.netYield).toBeGreaterThan(2);
+    expect(result.capRate).toBeGreaterThan(4);
+    expect(result.cashOnCash).toBeGreaterThan(8);
+  });
+
+  it('returns fail for a weak investment', () => {
+    const result = calculateScreening(
+      50_000,
+      40_000,
+      200_000,
+      10_000_000,
+      3_000_000,
+      0.01,
+    );
+    expect(result.score.overall).toBe('fail');
+  });
+
+  it('individual metric scores reflect pass/fail thresholds', () => {
+    const result = calculateScreening(216_000, 0, 0, 6_000_000, 1_500_000, 0.10);
+    expect(result.score.grossYield.pass).toBe(true);
+    expect(result.score.grossYield.value).toBeCloseTo(3.6, 1);
+    expect(result.score.grossYield.threshold).toBe(3.5);
+  });
+
+  it('marginal score when value is between marginal and pass threshold', () => {
+    const result = calculateScreening(150_000, 0, 0, 5_000_000, 1_000_000, 0.04);
+    expect(result.score.grossYield.pass).toBe(false);
+    expect(result.score.grossYield.marginal).toBe(true);
+  });
+
+  it('calculate() returns screening as part of result', () => {
+    const result = calculate(baseVals);
+    expect(result.screening).toBeDefined();
+    expect(typeof result.screening.grossYield).toBe('number');
+    expect(['pass', 'marginal', 'fail']).toContain(result.screening.score.overall);
+  });
+
+  it('passCount + failCount equals totalChecks', () => {
+    const result = calculate(baseVals);
+    const { score } = result.screening;
+    expect(score.totalChecks).toBe(5);
+    expect(score.passCount).toBeGreaterThanOrEqual(0);
+    expect(score.passCount).toBeLessThanOrEqual(score.totalChecks);
   });
 });
