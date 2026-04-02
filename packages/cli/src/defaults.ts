@@ -2,7 +2,7 @@ import type { CalcValues } from "../../../src/calculator";
 
 export const CALC_VALUES_DEFAULTS: CalcValues = {
   price: 3.5,
-  size: 2000,
+  size: 200,
   rentSqft: 40,
   managementFee: 5,
   mortgageRate: 3.5,
