@@ -1,0 +1,34 @@
+# Source
+src/
+packages/cli/src/
+packages/cli/test/
+packages/cli/tsconfig.json
+packages/cli/bun.lock
+
+# Web app
+index.html
+vite.config.ts
+vite.config.cli.ts
+manifest.json
+sw.js
+_config.yml
+*.png
+openspec/
+
+# Dev / config
+.github/
+.crush/
+.opencode/
+tsconfig.json
+
+# Misc
+*.log
+*.swp
+*.swo
+*~
+.DS_Store
+.env
+.env.local
+dist/
+build/
+node_modules/

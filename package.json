@@ -4,14 +4,18 @@
   "version": "0.0.0",
   "type": "module",
   "bin": {
-    "homer-cli": "./packages/cli/bin/homer-cli.js"
+    "homer-cli": "./packages/cli/bin/homer-cli.cjs"
   },
   "scripts": {
+    "prepare": "vite build --config vite.config.cli.ts",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"
+  },
+  "dependencies": {
+    "commander": "^11.1.0"
   },
   "devDependencies": {
     "typescript": "^5.4.5",
