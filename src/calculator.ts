@@ -1,3 +1,6 @@
+import { getThresholds, DEFAULT_THRESHOLDS } from './threshold-config';
+import type { ThresholdConfig, ThresholdConfig as ThresholdConfigImport } from './types';
+
 export interface CalcValues {
   price: number;
   size: number;
@@ -147,14 +150,6 @@ export function calculateIRR(
   return NaN;
 }
 
-const THRESHOLDS = {
-  grossYield: { pass: 3.5, marginal: 2.5 },
-  netYield: { pass: 2.0, marginal: 1.5 },
-  capRate: { pass: 4.0, marginal: 3.0 },
-  cashOnCash: { pass: 8.0, marginal: 4.0 },
-  irr: { pass: 8.0, marginal: 5.0 },
-} as const;
-
 function metricScore(value: number, passThreshold: number, marginalThreshold: number): MetricScore {
   return {
     value,
@@ -195,7 +190,9 @@ export function calculateScreening(
   purchasePrice: number,
   downPayment: number,
   irr: number,
+  thresholds?: ThresholdConfigImport,
 ): ScreeningMetrics {
+  const t = thresholds ? getThresholds(thresholds) : DEFAULT_THRESHOLDS;
   const noi = annualRent - annualCosts;
   const preTaxCashFlow = noi - annualMortgage;
 
@@ -207,11 +204,11 @@ export function calculateScreening(
   const irrPct = isNaN(irr) ? 0 : irr * 100;
 
   const scores = {
-    grossYield: metricScore(grossYield, THRESHOLDS.grossYield.pass, THRESHOLDS.grossYield.marginal),
-    netYield: metricScore(netYield, THRESHOLDS.netYield.pass, THRESHOLDS.netYield.marginal),
-    capRate: metricScore(capRate, THRESHOLDS.capRate.pass, THRESHOLDS.capRate.marginal),
-    cashOnCash: metricScore(cashOnCash, THRESHOLDS.cashOnCash.pass, THRESHOLDS.cashOnCash.marginal),
-    irr: metricScore(irrPct, THRESHOLDS.irr.pass, THRESHOLDS.irr.marginal),
+    grossYield: metricScore(grossYield, t.grossYield.pass, t.grossYield.marginal),
+    netYield: metricScore(netYield, t.netYield.pass, t.netYield.marginal),
+    capRate: metricScore(capRate, t.capRate.pass, t.capRate.marginal),
+    cashOnCash: metricScore(cashOnCash, t.cashOnCash.pass, t.cashOnCash.marginal),
+    irr: metricScore(irrPct, t.irr.pass, t.irr.marginal),
   };
 
   const checks = Object.values(scores);
@@ -236,7 +233,10 @@ export function calculateScreening(
   };
 }
 
-export function calculate(vals: CalcValues): CalcResult {
+export function calculate(
+  vals: CalcValues,
+  thresholds?: ThresholdConfigImport,
+): CalcResult {
   const priceM = vals.price * 1000000;
   const downPaymentM = vals.downPayment * 1000000;
   const principal = priceM - downPaymentM;
@@ -283,6 +283,7 @@ export function calculate(vals: CalcValues): CalcResult {
     priceM,
     downPaymentM,
     irr,
+    thresholds,
   );
 
   return {

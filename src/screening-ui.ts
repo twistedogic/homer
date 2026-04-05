@@ -2,6 +2,8 @@ import { parseNumber } from './formatting';
 import { calculate, CalcValues } from './calculator';
 import type { ScreeningMetrics, MetricScore } from './calculator';
 import { syncSharedInput, SHARED_KEYS, SharedPanel } from './shared-state';
+import { loadConfig, saveConfig, resetConfig, getThresholds, validateThresholds, PRESETS } from './threshold-config';
+import type { ThresholdConfig, PresetName, Thresholds, ValidationResult } from './types';
 
 const screenInputs = {
   price: document.getElementById('scr-price') as HTMLInputElement,
@@ -19,6 +21,31 @@ const screenInputs = {
   propertyTaxRate: document.getElementById('scr-propertyTaxRate') as HTMLInputElement,
   capex: document.getElementById('scr-capex') as HTMLInputElement,
 };
+
+// Global threshold state
+let thresholdConfig: ThresholdConfig = loadConfig();
+let thresholdValidation: ValidationResult = { valid: true };
+
+// DOM elements for threshold UI
+const thresholdPresetSelect = document.getElementById('threshold-preset') as HTMLSelectElement;
+const thresholdInputsContainer = document.getElementById('threshold-inputs')!;
+const thresholdResetBtn = document.getElementById('threshold-reset') as HTMLButtonElement;
+const thresholdErrorContainer = document.getElementById('threshold-errors')!;
+
+const PRESET_OPTIONS: Array<{ value: PresetName | 'custom'; label: string }> = [
+  { value: 'conservative', label: 'Conservative (Yield-Focused)' },
+  { value: 'moderate', label: 'Moderate (Balanced)' },
+  { value: 'aggressive', label: 'Aggressive (More Deals Pass)' },
+  { value: 'custom', label: 'Custom Values' },
+];
+
+const METRIC_KEYS: Array<{ key: keyof Thresholds; label: string }> = [
+  { key: 'grossYield', label: 'Gross Yield' },
+  { key: 'netYield', label: 'Net Yield' },
+  { key: 'capRate', label: 'Cap Rate' },
+  { key: 'cashOnCash', label: 'Cash-on-Cash' },
+  { key: 'irr', label: 'IRR' },
+];
 
 function parseInputs(): { valid: boolean; values: CalcValues } {
   const vals: CalcValues = {
@@ -74,7 +101,12 @@ function pct(n: number): string {
   return n.toFixed(2) + '%';
 }
 
-function renderScreening(container: HTMLElement, metrics: ScreeningMetrics, irr: number): void {
+function renderScreening(container: HTMLElement, metrics: ScreeningMetrics, irr: number, invalid: boolean): void {
+  if (invalid) {
+    container.innerHTML = '<div class="placeholder-results">Invalid thresholds. Please fix the errors above.</div>';
+    return;
+  }
+
   const { score } = metrics;
   const irrPct = isNaN(irr) ? 0 : irr * 100;
 
@@ -120,6 +152,196 @@ function renderScreening(container: HTMLElement, metrics: ScreeningMetrics, irr:
   `;
 }
 
+function getActiveThresholds(): Thresholds {
+  return getThresholds(thresholdConfig);
+}
+
+function buildThresholdCustom(): Partial<Thresholds> {
+  const custom: Partial<Thresholds> = {};
+  for (const { key } of METRIC_KEYS) {
+    const passInput = document.getElementById(`threshold-${key}-pass`) as HTMLInputElement;
+    const marginalInput = document.getElementById(`threshold-${key}-marginal`) as HTMLInputElement;
+    if (passInput && marginalInput) {
+      const pass = parseFloat(passInput.value);
+      const marginal = parseFloat(marginalInput.value);
+      if (!isNaN(pass) && !isNaN(marginal)) {
+        custom[key] = { pass, marginal };
+      }
+    }
+  }
+  return custom;
+}
+
+function updateThresholdConfig(): void {
+  const preset = thresholdPresetSelect.value as PresetName | 'custom';
+  
+  if (preset === 'custom') {
+    const custom = buildThresholdCustom();
+    thresholdConfig = { preset: 'custom', custom };
+  } else {
+    thresholdConfig = { preset };
+  }
+  
+  // Validate
+  if (preset === 'custom') {
+    thresholdValidation = validateThresholds(thresholdConfig.custom || {});
+  } else {
+    thresholdValidation = { valid: true };
+  }
+  
+  // Show/hide error
+  if (!thresholdValidation.valid) {
+    thresholdErrorContainer.innerHTML = thresholdValidation.errors!.map(e => 
+      `<div class="threshold-error">${e}</div>`
+    ).join('');
+    thresholdErrorContainer.style.display = 'block';
+  } else {
+    thresholdErrorContainer.innerHTML = '';
+    thresholdErrorContainer.style.display = 'none';
+  }
+  
+  // Save to localStorage
+  saveConfig(thresholdConfig);
+  
+  // Update input states
+  updateThresholdInputStates();
+  
+  // Update results
+  updateScreening();
+}
+
+function updateThresholdInputStates(): void {
+  const isCustom = thresholdPresetSelect.value === 'custom';
+  const isReadonly = !isCustom;
+  
+  for (const { key } of METRIC_KEYS) {
+    const passInput = document.getElementById(`threshold-${key}-pass`) as HTMLInputElement;
+    const marginalInput = document.getElementById(`threshold-${key}-marginal`) as HTMLInputElement;
+    
+    if (passInput) {
+      passInput.readOnly = isReadonly;
+      passInput.disabled = isReadonly;
+    }
+    if (marginalInput) {
+      marginalInput.readOnly = isReadonly;
+      marginalInput.disabled = isReadonly;
+    }
+  }
+}
+
+function updateThresholdInputsFromConfig(): void {
+  const thresholds = getActiveThresholds();
+  
+  // Update select
+  thresholdPresetSelect.value = thresholdConfig.preset;
+  
+  // Update inputs
+  for (const { key } of METRIC_KEYS) {
+    const passInput = document.getElementById(`threshold-${key}-pass`) as HTMLInputElement;
+    const marginalInput = document.getElementById(`threshold-${key}-marginal`) as HTMLInputElement;
+    
+    if (passInput && thresholds[key]) {
+      passInput.value = thresholds[key].pass.toFixed(1);
+    }
+    if (marginalInput && thresholds[key]) {
+      marginalInput.value = thresholds[key].marginal.toFixed(1);
+    }
+  }
+  
+  updateThresholdInputStates();
+}
+
+function renderThresholdInputs(): void {
+  const thresholds = getActiveThresholds();
+  const isCustom = thresholdConfig.preset === 'custom';
+  
+  let html = '';
+  
+  for (const { key, label } of METRIC_KEYS) {
+    const t = thresholds[key];
+    html += `
+      <div class="threshold-row">
+        <span class="threshold-label">${label}</span>
+        <div class="threshold-inputs">
+          <div class="threshold-input-group">
+            <label>Pass</label>
+            <input type="number" id="threshold-${key}-pass" step="0.1" value="${t.pass.toFixed(1)}" ${isCustom ? '' : 'readonly disabled'}>
+            <span class="threshold-unit">%</span>
+          </div>
+          <span class="threshold-separator">/</span>
+          <div class="threshold-input-group">
+            <label>Marginal</label>
+            <input type="number" id="threshold-${key}-marginal" step="0.1" value="${t.marginal.toFixed(1)}" ${isCustom ? '' : 'readonly disabled'}>
+            <span class="threshold-unit">%</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  thresholdInputsContainer.innerHTML = html;
+  
+  // Add event listeners for custom mode
+  if (isCustom) {
+    for (const { key } of METRIC_KEYS) {
+      const passInput = document.getElementById(`threshold-${key}-pass`) as HTMLInputElement;
+      const marginalInput = document.getElementById(`threshold-${key}-marginal`) as HTMLInputElement;
+      
+      passInput.addEventListener('input', updateThresholdConfig);
+      marginalInput.addEventListener('input', updateThresholdConfig);
+    }
+  }
+}
+
+function handlePresetChange(): void {
+  const preset = thresholdPresetSelect.value as PresetName | 'custom';
+  
+  if (preset === 'custom') {
+    // Clear inputs for custom, but show conservative as placeholder
+    const conservative = PRESETS.conservative;
+    for (const { key } of METRIC_KEYS) {
+      const passInput = document.getElementById(`threshold-${key}-pass`) as HTMLInputElement;
+      const marginalInput = document.getElementById(`threshold-${key}-marginal`) as HTMLInputElement;
+      passInput.value = '';
+      passInput.placeholder = conservative[key].pass.toFixed(1);
+      marginalInput.value = '';
+      marginalInput.placeholder = conservative[key].marginal.toFixed(1);
+    }
+  }
+  
+  updateThresholdConfig();
+}
+
+function handleReset(): void {
+  thresholdConfig = resetConfig();
+  thresholdValidation = { valid: true };
+  thresholdErrorContainer.innerHTML = '';
+  thresholdErrorContainer.style.display = 'none';
+  saveConfig(thresholdConfig);
+  updateThresholdInputsFromConfig();
+  renderThresholdInputs();
+  updateScreening();
+}
+
+function initThresholdUI(): void {
+  // Build preset dropdown
+  let optionsHtml = '';
+  for (const opt of PRESET_OPTIONS) {
+    optionsHtml += `<option value="${opt.value}">${opt.label}</option>`;
+  }
+  thresholdPresetSelect.innerHTML = optionsHtml;
+  
+  // Render threshold inputs
+  renderThresholdInputs();
+  
+  // Update from saved config
+  updateThresholdInputsFromConfig();
+  
+  // Add event listeners
+  thresholdPresetSelect.addEventListener('change', handlePresetChange);
+  thresholdResetBtn.addEventListener('click', handleReset);
+}
+
 function updateScreening(): void {
   const container = document.getElementById('screening-results')!;
   const { valid, values } = parseInputs();
@@ -129,11 +351,20 @@ function updateScreening(): void {
     return;
   }
 
-  const result = calculate(values);
-  renderScreening(container, result.screening, result.irr);
+  if (!thresholdValidation.valid) {
+    container.innerHTML = '<div class="placeholder-results">Invalid thresholds. Please fix the errors above.</div>';
+    return;
+  }
+
+  const result = calculate(values, thresholdConfig);
+  renderScreening(container, result.screening, result.irr, false);
 }
 
 export function initScreening(): void {
+  // Initialize threshold UI first
+  initThresholdUI();
+  
+  // Property input listeners
   for (const [key, input] of Object.entries(screenInputs)) {
     input.addEventListener('input', () => {
       if ((SHARED_KEYS as readonly string[]).includes(key)) {
@@ -143,5 +374,6 @@ export function initScreening(): void {
     });
   }
 
+  // Initial update
   updateScreening();
 }

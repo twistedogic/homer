@@ -194,20 +194,20 @@ describe('calculateCashOnCash', () => {
 });
 
 describe('calculateScreening', () => {
-  it('returns pass for a strong investment', () => {
+  it('returns pass for a strong investment (conservative thresholds)', () => {
     const result = calculateScreening(
-      300_000,
-      30_000,
-      0,
-      3_000_000,
-      1_000_000,
-      0.15,
+      500_000,  // annual rent high enough for gross yield > 4%
+      50_000,   // costs
+      0,        // no mortgage
+      10_000_000, // price 10M
+      2_000_000, // down payment 2M
+      0.15,      // IRR 15%
     );
     expect(result.score.overall).toBe('pass');
-    expect(result.grossYield).toBeGreaterThan(3.5);
-    expect(result.netYield).toBeGreaterThan(2);
-    expect(result.capRate).toBeGreaterThan(4);
-    expect(result.cashOnCash).toBeGreaterThan(8);
+    expect(result.grossYield).toBeGreaterThanOrEqual(4.0);  // conservative threshold
+    expect(result.netYield).toBeGreaterThanOrEqual(2.5);     // conservative threshold
+    expect(result.capRate).toBeGreaterThanOrEqual(4.5);      // conservative threshold
+    expect(result.cashOnCash).toBeGreaterThanOrEqual(10.0); // conservative threshold
   });
 
   it('returns fail for a weak investment', () => {
@@ -222,15 +222,20 @@ describe('calculateScreening', () => {
     expect(result.score.overall).toBe('fail');
   });
 
-  it('individual metric scores reflect pass/fail thresholds', () => {
+  it('individual metric scores reflect conservative thresholds', () => {
+    // 3.6% gross yield - passes conservative threshold of 4.0%
+    // This test now expects marginal since 3.6 < 4.0 (pass) but >= 3.0 (marginal)
     const result = calculateScreening(216_000, 0, 0, 6_000_000, 1_500_000, 0.10);
-    expect(result.score.grossYield.pass).toBe(true);
+    // With conservative thresholds (4.0/3.0), 3.6% is marginal
+    expect(result.score.grossYield.pass).toBe(false);
+    expect(result.score.grossYield.marginal).toBe(true);
     expect(result.score.grossYield.value).toBeCloseTo(3.6, 1);
-    expect(result.score.grossYield.threshold).toBe(3.5);
+    expect(result.score.grossYield.threshold).toBe(4.0); // conservative pass threshold
   });
 
-  it('marginal score when value is between marginal and pass threshold', () => {
-    const result = calculateScreening(150_000, 0, 0, 5_000_000, 1_000_000, 0.04);
+  it('marginal score when value is between marginal and pass (conservative)', () => {
+    // 3.0% gross yield - exactly at marginal threshold for conservative
+    const result = calculateScreening(180_000, 0, 0, 6_000_000, 1_500_000, 0.07);
     expect(result.score.grossYield.pass).toBe(false);
     expect(result.score.grossYield.marginal).toBe(true);
   });

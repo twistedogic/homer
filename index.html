@@ -205,6 +205,16 @@
                 <input type="number" id="scr-propertyTaxRate" step="0.1" placeholder="15" value="15" data-shared="propertyTaxRate">
               </div>
             </fieldset>
+
+            <fieldset class="form-section">
+              <legend>Investment Criteria</legend>
+              <div class="threshold-controls">
+                <select id="threshold-preset" class="threshold-preset-select"></select>
+                <button type="button" id="threshold-reset" class="threshold-reset-btn">Reset</button>
+              </div>
+              <div id="threshold-inputs" class="threshold-inputs-container"></div>
+              <div id="threshold-errors" class="threshold-errors" style="display: none;"></div>
+            </fieldset>
           </form>
         </div>
 

@@ -137,3 +137,133 @@
   background: #fee2e2;
   color: var(--error);
 }
+
+/* Threshold Config UI */
+.threshold-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.threshold-preset-select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+}
+
+.threshold-reset-btn {
+  padding: 8px 16px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.threshold-reset-btn:hover {
+  background: #e5e7eb;
+}
+
+.threshold-inputs-container {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.threshold-row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.threshold-row:last-child {
+  border-bottom: none;
+}
+
+.threshold-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.threshold-inputs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.threshold-input-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.threshold-input-group label {
+  font-size: 11px;
+  color: var(--metric-label);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.threshold-input-group input {
+  width: 70px;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.threshold-input-group input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+.threshold-input-group input:read-only,
+.threshold-input-group input:disabled {
+  background: #f3f4f6;
+  color: var(--metric-label);
+  cursor: not-allowed;
+}
+
+.threshold-input-group input.invalid {
+  border-color: var(--error);
+  background: #fef2f2;
+}
+
+.threshold-separator {
+  color: var(--metric-label);
+  font-size: 14px;
+}
+
+.threshold-unit {
+  font-size: 12px;
+  color: var(--metric-label);
+}
+
+.threshold-errors {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 12px;
+}
+
+.threshold-error {
+  color: var(--error);
+  font-size: 13px;
+  padding: 4px 0;
+}

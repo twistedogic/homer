@@ -8,6 +8,7 @@ bun.lock
 
 .opencode/
 .crush/
+.pi/
 
 _site/
 .sass-cache/
