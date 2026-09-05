@@ -44,7 +44,7 @@ function validateInputsCalc(): { valid: boolean; values: CalcValues } {
     managementFee: { valid: vals.managementFee >= 0 },
     mortgageRate: { valid: vals.mortgageRate > 0 && vals.mortgageRate <= 30 },
     mortgagePeriod: { valid: vals.mortgagePeriod > 0 && vals.mortgagePeriod <= 50 },
-    downPayment: { valid: vals.downPayment > 0 && vals.downPayment < vals.price },
+    downPayment: { valid: vals.downPayment > 0 && vals.downPayment <= vals.price },
     holdingPeriod: { valid: vals.holdingPeriod > 0 && vals.holdingPeriod <= 50 },
     monthsRenters: { valid: vals.monthsRenters >= 0 && vals.monthsRenters <= 12 },
     apprecRate: { valid: vals.apprecRate >= 0 && vals.apprecRate <= 20 },
